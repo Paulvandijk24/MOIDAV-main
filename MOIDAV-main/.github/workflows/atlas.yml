@@ -1,0 +1,28 @@
+name: Atlas
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  atlas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Atlas
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/raoulg/atlas/main/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Generate Atlas page
+        run: atlas-code view --no-open --out site/index.html
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: atlas
+          path: site
