@@ -14,9 +14,12 @@ from __future__ import annotations
 import ast
 import inspect
 import json
-import sys
+import logging
 from pathlib import Path
 
+from wa_analyzer.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK = ROOT / "notebooks" / "lesson1" / "01.2-irc-chat.ipynb"
 CLASS_NAME = "ParseIRCLines"
@@ -47,22 +50,20 @@ def normalise(source: str) -> str:
 
 
 def main() -> int:
+    configure_logging(ROOT)
     notebook_source = notebook_class_source(NOTEBOOK, CLASS_NAME)
     library_source = library_class_source()
 
     if normalise(notebook_source) == normalise(library_source):
-        print(f"{CLASS_NAME}: lesson 1 and scripts/pipelines.py agree")
+        logger.info("%s: lesson 1 and scripts/pipelines.py agree", CLASS_NAME)
         return 0
 
-    print(
+    logger.error(
         f"{CLASS_NAME} has drifted between {NOTEBOOK} and scripts/pipelines.py.\n"
-        f"They are duplicated on purpose (see PTT-91) — bring them back in sync by hand.\n",
-        file=sys.stderr,
+        "They are duplicated on purpose (see PTT-91) — bring them back in sync by hand.\n"
     )
-    print("--- notebook version ---", file=sys.stderr)
-    print(notebook_source, file=sys.stderr)
-    print("--- scripts/pipelines.py version ---", file=sys.stderr)
-    print(library_source, file=sys.stderr)
+    logger.error("--- notebook version ---\n%s", notebook_source)
+    logger.error("--- scripts/pipelines.py version ---\n%s", library_source)
     return 1
 
 

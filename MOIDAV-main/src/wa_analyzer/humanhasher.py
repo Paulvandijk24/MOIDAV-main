@@ -1,6 +1,12 @@
 import hashlib
+import logging
 import math
 import operator
+from pathlib import Path
+
+from wa_analyzer.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 
 words = [
     "animated",
@@ -611,7 +617,8 @@ HASHER = Hasher()
 humanize = HASHER.humanize
 
 if __name__ == "__main__":
+    configure_logging(Path(__file__).resolve().parents[2])
     hasher = Hasher()
     text = "yellow submarines"
     human = hasher.humanize(text, n=2)
-    print(human)
+    logger.info("%s", human)

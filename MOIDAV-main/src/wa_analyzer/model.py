@@ -1,10 +1,13 @@
+import logging
+
 import numpy as np
 import seaborn as sns
-from loguru import logger
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import manhattan_distances
+
+logger = logging.getLogger(__name__)
 
 
 class TextClustering:

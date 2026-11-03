@@ -15,12 +15,16 @@ from __future__ import annotations
 
 import argparse
 import io
+import logging
 from pathlib import Path
 
 import pandas as pd
 import requests
 import seaborn as sns
-from loguru import logger
+
+from wa_analyzer.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 
 # Each entry says what the dataset is FOR, because "why this one" is the part that gets lost.
 SEABORN = {
@@ -86,6 +90,7 @@ def berkeley() -> pd.DataFrame:
 
 
 def main() -> None:
+    configure_logging(Path(__file__).resolve().parents[1])
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out", type=Path, default=Path("data/showcase"))
     args = ap.parse_args()

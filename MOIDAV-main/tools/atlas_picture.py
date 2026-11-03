@@ -1,7 +1,3 @@
-# /// script
-# requires-python = ">=3.11"
-# dependencies = ["playwright"]
-# ///
 """Take light and dark screenshots of an Atlas HTML page."""
 
 import pathlib

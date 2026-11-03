@@ -22,6 +22,7 @@ Every step is also importable, which is what 05.4 does to walk through it inline
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -38,7 +39,8 @@ from goad_toolkit.visualizer import (
     PlotSettings,
     ResidualPlot,
 )
-from loguru import logger
+
+logger = logging.getLogger(__name__)
 
 RESULT_DIR = Path.home() / ".cache/goad/covid/result"
 VACCINATION_START = "2021-01-06"
@@ -48,7 +50,7 @@ def preprocess() -> pd.DataFrame:
     """Download (if needed), clean, lag and z-score the Dutch COVID series."""
     logger.info("Preprocessing COVID data...")
     processed = CovidDataProcessor(FileConfig(), DataConfig()).process()
-    logger.success(f"Processed {len(processed):,} days.")
+    logger.info("Processed %s days.", f"{len(processed):,}")
     return processed
 
 
@@ -56,7 +58,7 @@ def save_fig(fig, name: str) -> None:
     RESULT_DIR.mkdir(parents=True, exist_ok=True)
     path = RESULT_DIR / name
     fig.savefig(path)
-    logger.success(f"Saved {path}")
+    logger.info("Saved %s", path)
 
 
 def plot_zscores(data: pd.DataFrame):
@@ -106,7 +108,7 @@ def fit_model(data: pd.DataFrame) -> pd.DataFrame:
         bounds=[(0, 1.0), (0, None), (-1.0, 0), (0, len(data))],
     )
     halfway = data.index[int(round(params[3]))].date()
-    logger.success(
+    logger.info(
         f"Fitted model: a={params[0]:.4f} b={params[1]:.1f} k={params[2]:.3f}, "
         f"switch halfway on {halfway}"
     )
@@ -153,7 +155,7 @@ def plot_residual_distribution(data: pd.DataFrame):
     """Fit every continuous family to the residual: noise, or a shape the model lacks."""
     fitter = DistributionFitter(seed=42)
     fits = fitter.fit(data["residual"].to_numpy(), discrete=False)
-    logger.success(f"Best fit: {fitter.best(fits)}")
+    logger.info("Best fit: %s", fitter.best(fits))
     settings = PlotSettings(
         figsize=(12, 6),
         title="Residual distribution",
@@ -170,13 +172,16 @@ def plot_residual_distribution(data: pd.DataFrame):
 
 
 def main() -> None:
+    from wa_analyzer.logging_config import configure_logging
+
+    configure_logging(Path(__file__).resolve().parents[1])
     data = preprocess()
     plot_zscores(data)
     data = fit_model(data)
     plot_model(data)
     plot_residual(data)
     plot_residual_distribution(data)
-    logger.success("All done.")
+    logger.info("All done.")
 
 
 if __name__ == "__main__":

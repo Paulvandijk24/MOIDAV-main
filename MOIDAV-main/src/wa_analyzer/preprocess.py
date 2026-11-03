@@ -1,13 +1,13 @@
 import re
-import sys
+import logging
 import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
 import click
 import pandas as pd
-from loguru import logger
 
+from wa_analyzer.logging_config import configure_logging
 from wa_analyzer.settings import (
     BaseRegexes,
     Folders,
@@ -18,11 +18,7 @@ from wa_analyzer.settings import (
     oldRegexes,
 )
 
-logger.remove()
-logger.add("logs/logfile.log", rotation="1 week", level="DEBUG")
-logger.add(sys.stderr, level="INFO")
-
-logger.debug(f"Python path: {sys.path}")
+logger = logging.getLogger(__name__)
 
 
 class WhatsappPreprocessor:
@@ -42,7 +38,7 @@ class WhatsappPreprocessor:
         outfile = self.folders.processed / f"whatsapp-{now}.csv"
         logger.info(f"Writing to {outfile}")
         df.to_csv(outfile, index=False)
-        logger.success("Done!")
+        logger.info("Done!")
 
         return outfile
 
@@ -103,6 +99,7 @@ class WhatsappPreprocessor:
     "--device", default="android", help="Device type: iOS, Android, old, or csv"
 )
 def main(device: str):
+    configure_logging(Path(__file__).resolve().parents[2])
     with open("config.toml", "rb") as f:
         config = tomllib.load(f)
         raw = Path(config["raw"])

@@ -13,6 +13,7 @@ of the regex that then drifts.
 from __future__ import annotations
 
 import re
+import logging
 
 import pandas as pd
 from goad_toolkit.datatransforms import (
@@ -21,14 +22,15 @@ from goad_toolkit.datatransforms import (
     TimeFeatures,
     TransformBase,
 )
-from loguru import logger
+
+logger = logging.getLogger(__name__)
 
 
 class ParseIRCLines(TransformBase):
     """Turn one-row-per-day IRC logs into one row per message.
 
     Combines the `<nick>` line pattern with the `/me` action-line fallback, and reports
-    coverage through `loguru` instead of a manual print.
+    coverage through the standard library logger instead of a manual print.
     """
 
     LINE = re.compile(r"^\[(\d{2}):(\d{2})\]\s+<(\S+)>\s+(.*)$")

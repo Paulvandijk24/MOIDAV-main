@@ -1,7 +1,12 @@
 import os
 import sys
+import logging
+from pathlib import Path
 
-from loguru import logger
+from wa_analyzer.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
+configure_logging(Path(__file__).resolve().parents[2])
 
 logger.info("===== sys.path =====")
 logger.info(f"Length of sys.path: {len(sys.path)}")

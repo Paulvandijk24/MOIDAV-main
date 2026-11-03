@@ -15,12 +15,14 @@ error message says exactly which step of the setup is missing.
 
 from __future__ import annotations
 
+import logging
 import tomllib
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
-from loguru import logger
+
+logger = logging.getLogger(__name__)
 
 # src/wa_analyzer/data.py -> repo root
 ROOT = Path(__file__).resolve().parents[2]
@@ -183,7 +185,7 @@ def load_own_chat(
     if "author" in data.columns:
         data["author"] = data["author"].replace(AUTHOR_ALIASES)
     if verbose:
-        logger.success(
-            f"Loaded {len(data):,} of your own messages from {datafile.name}"
+        logger.info(
+            "Loaded %s of your own messages from %s", f"{len(data):,}", datafile.name
         )
     return data

@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import math
 from collections import defaultdict
 from dataclasses import dataclass
@@ -12,11 +13,12 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import seaborn as sns
-from loguru import logger
 from pandas import Timestamp
 from plotly.subplots import make_subplots
 
 from wa_analyzer.filehandler import FileHandler
+
+logger = logging.getLogger(__name__)
 
 GraphWindows: TypeAlias = Tuple[Timestamp, nx.Graph]
 

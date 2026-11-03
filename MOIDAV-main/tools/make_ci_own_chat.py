@@ -14,10 +14,15 @@ Writes `data/processed/ci-fixture.parq` and, only when none exists yet, a
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from wa_analyzer.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED = ROOT / "data" / "processed"
@@ -123,17 +128,23 @@ def build_fixture(seed: int = 20260901) -> pd.DataFrame:
 
 
 def main() -> None:
+    configure_logging(ROOT)
     PROCESSED.mkdir(parents=True, exist_ok=True)
     chat = build_fixture()
     target = PROCESSED / FILENAME
     chat.to_parquet(target)
-    print(f"wrote {len(chat):,} messages, {chat.author.nunique()} authors -> {target}")
+    logger.info(
+        "Wrote %s messages from %s authors -> %s",
+        f"{len(chat):,}",
+        chat.author.nunique(),
+        target,
+    )
 
     if CONFIG.exists():
-        print(f"{CONFIG} already exists; left untouched")
+        logger.info("%s already exists; left untouched", CONFIG)
     else:
         CONFIG.write_text(f'current = "{FILENAME}"\n')
-        print(f"wrote {CONFIG} pointing current at {FILENAME}")
+        logger.info("Wrote %s pointing current at %s", CONFIG, FILENAME)
 
 
 if __name__ == "__main__":

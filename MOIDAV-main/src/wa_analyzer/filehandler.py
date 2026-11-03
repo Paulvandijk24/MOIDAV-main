@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 
 import pandas as pd
-from loguru import logger
+
+logger = logging.getLogger(__name__)
 
 
 class FileHandler:
@@ -12,5 +14,5 @@ class FileHandler:
         """Load preprocessed WhatsApp data."""
         timecol = self.config.time_col
         data = pd.read_csv(filepath, parse_dates=[timecol])
-        logger.success(f"Loade data from {filepath}")
+        logger.info("Loaded data from %s", filepath)
         return data

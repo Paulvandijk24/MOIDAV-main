@@ -16,12 +16,17 @@ ordinary *Thursdays* — the fair comparison, not all days including weekends.
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
 import pandas as pd
 import pyarrow.parquet as pq
 from huggingface_hub import HfFileSystem
+
+from wa_analyzer.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 
 REPO = "datasets/common-pile/ubuntu_irc@refs/convert/parquet/default/train"
 START, END = "2013-01-01", "2017-12-31"
@@ -103,8 +108,9 @@ def hourly_lines(days: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
+    configure_logging(Path(__file__).resolve().parents[1])
     days = fetch_days(START, END, CHANNELS)
-    print(f"fetched {len(days)} channel-days")
+    logger.info("Fetched %s channel-days", len(days))
 
     # Per-day, per-hour counts — not pre-pooled into ordinary/release totals.
     # Pooling lets a handful of high-volume days dominate a 10-day release
@@ -133,8 +139,11 @@ def main() -> None:
     out = pd.DataFrame.from_records(records)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(OUT, index=False)
-    print(f"wrote {len(out)} rows -> {OUT}")
-    print(out.groupby(["channel", "is_release"])["date"].nunique().to_string())
+    logger.info("Wrote %s rows -> %s", len(out), OUT)
+    logger.info(
+        "Days by channel/release status:\n%s",
+        out.groupby(["channel", "is_release"])["date"].nunique().to_string(),
+    )
 
 
 if __name__ == "__main__":

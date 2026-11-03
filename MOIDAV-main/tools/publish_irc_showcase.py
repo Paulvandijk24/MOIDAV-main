@@ -16,10 +16,14 @@ Uploading needs a token with write access to the target namespace, from
 from __future__ import annotations
 
 import argparse
+import logging
 from pathlib import Path
 
 import pandas as pd
 
+from wa_analyzer.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[1]
 PARQUET = ROOT / "data" / "showcase" / "ubuntu_irc_days.parquet"
 DEFAULT_REPO = "pttrn-io/ubuntu-irc-days"
@@ -124,6 +128,7 @@ def build_card(days: pd.DataFrame, repo: str) -> str:
 
 
 def main() -> None:
+    configure_logging(ROOT)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", default=DEFAULT_REPO, help="target hub dataset repo")
     parser.add_argument("--push", action="store_true", help="actually create and upload")
@@ -139,8 +144,8 @@ def main() -> None:
     card = build_card(days, args.repo)
 
     if not args.push:
-        print(card)
-        print(f"\n--- dry run: nothing uploaded. Add --push to create {args.repo}.")
+        logger.info("%s", card)
+        logger.info("Dry run: nothing uploaded. Add --push to create %s.", args.repo)
         return
 
     from huggingface_hub import HfApi
@@ -159,7 +164,12 @@ def main() -> None:
         repo_id=args.repo,
         repo_type="dataset",
     )
-    print(f"uploaded {PARQUET.name} ({PARQUET.stat().st_size / 1e6:.1f} MB) to {args.repo}")
+    logger.info(
+        "Uploaded %s (%.1f MB) to %s",
+        PARQUET.name,
+        PARQUET.stat().st_size / 1e6,
+        args.repo,
+    )
 
 
 if __name__ == "__main__":

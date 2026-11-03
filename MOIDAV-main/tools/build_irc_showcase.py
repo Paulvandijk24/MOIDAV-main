@@ -19,11 +19,16 @@ not. That is why the window comes first.
 from __future__ import annotations
 
 import argparse
+import logging
 from pathlib import Path
 
 import pandas as pd
 import pyarrow.parquet as pq
 from huggingface_hub import HfFileSystem
+
+from wa_analyzer.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 
 REPO = "datasets/common-pile/ubuntu_irc@refs/convert/parquet/default/train"
 
@@ -71,7 +76,7 @@ def fetch_days(start: str, end: str, channels: set[str]) -> pd.DataFrame:
                 ][["created", "channel", "text"]]
             )
 
-    print(f"read {read}/{total} row groups")
+    logger.info("Read %s/%s row groups", read, total)
     return (
         pd.concat(frames, ignore_index=True)
         .sort_values("created")
@@ -106,6 +111,7 @@ def hourly_profile(days: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
+    configure_logging(Path(__file__).resolve().parents[1])
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--start", default=DEFAULT_START)
     ap.add_argument("--end", default=DEFAULT_END)
@@ -129,22 +135,22 @@ def main() -> None:
     target = args.out / "ubuntu_irc_days.parquet"
     slice_.to_parquet(target, index=False)
     size = target.stat().st_size / 1e6
-    print(f"\n{len(slice_)} channel-days -> {target} ({size:.1f} MB)")
-    print(slice_.groupby("channel").size().to_string())
+    logger.info("%s channel-days -> %s (%.1f MB)", len(slice_), target, size)
+    logger.info("Channel counts:\n%s", slice_.groupby("channel").size().to_string())
 
     if args.control:
         control = days[days["channel"] == CONTROL_CHANNEL]
         profile = hourly_profile(control)
         path = args.out / "ubuntu_irc_control_hourly.csv"
         profile.to_csv(path, index=False)
-        print(f"{CONTROL_CHANNEL} hourly profile -> {path}")
+        logger.info("%s hourly profile -> %s", CONTROL_CHANNEL, path)
 
     if args.check:
         for ch, g in slice_.groupby("channel"):
             prof = hourly_profile(g)
             share = prof["messages"] / prof["messages"].sum()
             total = int(prof["messages"].sum())
-            print(
+            logger.info(
                 f"  {ch:12s} {total:>9,} messages  {total / len(g):6.0f}/day  "
                 f"peak/trough hour {share.max() / share.min():6.1f}x"
             )

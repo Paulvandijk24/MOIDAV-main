@@ -6,6 +6,7 @@ step by step; this script exists so the finding is reproducible rather than a sc
     uv run scripts/fingerprint_story.py
 """
 
+import logging
 import re
 from pathlib import Path
 
@@ -16,7 +17,11 @@ import pandas as pd
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from wa_analyzer.logging_config import configure_logging
+
 ROOT = Path(__file__).resolve().parent.parent
+configure_logging(ROOT)
+logger = logging.getLogger(__name__)
 df = pd.read_parquet(ROOT / "data/showcase/ubuntu_irc_days.parquet")
 PAT = re.compile(r"^\[(\d{2}):(\d{2})\]\s+<(\S+)>\s+(.*)$")
 rows = []
@@ -162,11 +167,10 @@ plt.tight_layout(rect=(0, 0, 1, 0.96))
 out = ROOT / "img/fingerprint_story.png"
 out.parent.mkdir(exist_ok=True)
 plt.savefig(out, dpi=130)
-print(f"wrote {out}")
+logger.info("Wrote %s", out)
 
-print("\nemoticon dialect shares (%):")
-print((emo_share * 100).round(1).to_string())
-print("\nquestion rate stability (the one that does NOT hold):")
+logger.info("Emoticon dialect shares (%%):\n%s", (emo_share * 100).round(1).to_string())
+logger.info("Question rate stability (the one that does NOT hold):")
 qa = early.assign(q=early.message.str.contains(r"\?")).groupby("author").q.mean()
 qb = late.assign(q=late.message.str.contains(r"\?")).groupby("author").q.mean()
-print(f"  spearman = {qa.corr(qb, method='spearman'):.2f}")
+logger.info("Spearman = %.2f", qa.corr(qb, method="spearman"))

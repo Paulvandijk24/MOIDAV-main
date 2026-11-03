@@ -20,13 +20,23 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
-    env:
-      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/.venv
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: snok/install-poetry@v1
+        with:
+          version: 2.3.4
       - name: Install the project's environment
-        run: uv sync --project MOIDAV-main
+        run: |
+          python -m venv "$GITHUB_WORKSPACE/.venv"
+          source "$GITHUB_WORKSPACE/.venv/bin/activate"
+          poetry --directory MOIDAV-main install --no-root
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+        env:
+          VIRTUAL_ENV: ${{ github.workspace }}/.venv
+          POETRY_VIRTUALENVS_CREATE: false
       - name: Install Atlas
         run: |
           curl -fsSL https://raw.githubusercontent.com/raoulg/atlas/main/install.sh | sh
@@ -34,7 +44,10 @@ jobs:
       - name: Draw the page
         run: atlas-code view --no-open --out site/index.html
       - name: Take its picture
-        run: uv run --script MOIDAV-main/tools/atlas_picture.py site/index.html site/atlas.png
+        run: poetry --directory MOIDAV-main run python tools/atlas_picture.py "$GITHUB_WORKSPACE/site/index.html" "$GITHUB_WORKSPACE/site/atlas.png"
+        env:
+          VIRTUAL_ENV: ${{ github.workspace }}/.venv
+          POETRY_VIRTUALENVS_CREATE: false
       - uses: actions/upload-pages-artifact@v5
         with:
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
