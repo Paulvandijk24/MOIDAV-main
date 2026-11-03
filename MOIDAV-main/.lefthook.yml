@@ -1,0 +1,27 @@
+pre-commit:
+  commands:
+    format:
+      files: git ls-files
+      glob: '*.{py, ipynb}'
+      run: poetry run ruff format {staged_files}
+      stage_fixed: true
+    clean-jupyter:
+      files: git ls-files
+      glob: '*.ipynb'
+      run: poetry run jupyter nbconvert --clear-output --inplace {staged_files}
+      stage_fixed: true
+    check:
+      files: git ls-files
+      glob: '*.{py, ipynb}'
+      run: poetry run ruff check {staged_files} --fix
+    ty:
+      glob: '*.py'
+      run: poetry run ty check {staged_files}
+    lychee:
+      run: poetry run lychee . --suggest --max-concurrency 32 --cache --format detailed --max-cache-age 7d
+    notebooktester:
+      glob: '*.ipynb'
+      run: poetry run notebooktester notebooks -v -t 150
+    pipeline-drift:
+      glob: '{scripts/pipelines.py,notebooks/lesson1/01-cleaning.ipynb}'
+      run: poetry run python tools/check_pipeline_drift.py

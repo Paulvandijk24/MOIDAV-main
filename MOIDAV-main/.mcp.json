@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "goad": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "uv run --no-project https://raw.githubusercontent.com/raoulg/goad_toolkit/$GOAD_REF/goad_mcp.py"
+      ],
+      "env": {
+        "GOAD_REF": "stable"
+      }
+    },
+    "codestyle": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "uv run --no-project https://raw.githubusercontent.com/raoulg/codestyle/$CODESTYLE_REF/codestyle_mcp.py"
+      ],
+      "env": {
+        "CODESTYLE_REF": "stable"
+      }
+    },
+    "learn": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://learn.pttrn.io/mcp/learn-student-mcp.tgz"
+      ],
+      "env": {
+        "LEARN_TOKEN": "AMf-vBxWfX3q2HVw4MXoGFlzLwV7jf53eEj9cqFbHhAHu7qpGCe7_8DGo3vg5T1aunxsKnY-5V0qGgWXsmp64QmAJvSvsrfD1DYqXBEnXqEu4uqgYQi4WQvEkw0ok_Fe7MlZ_kpx0KfI5npBwe1IZIRDdvD1jltPPMKKadfbXWJCkx9pIOtDVx1i2UjaITXgU8ZeDIQIDL3zDapc3DT1KC7SQBOYNr8GZDw19LfOj8NaftfSP9gZx79ykWnfKeAl0f4XNB9rVbWyR8tZHdpFiXtYC42d-d1kLI-NPx5PWP1AJsPMHOcqiXtghRUVi72q2dZ6Pu1mFcBURwIShEhZT9Dev8gWpNsB3_0w1HaZ_SZ-iwtrW0f_3dLoJEg_7QksN8YP_nrVaXkZXJCsU_gVC3h-mWUCi5nREi7qQ383B2QIYF4Yo2u5nfU",
+        "LEARN_PROJECT_ID": "learn-79720",
+        "LEARN_API_KEY": "AIzaSyAQbdn2HBQgahi__12zzN1JpJXwAAwXJ3w"
+      }
+    }
+  }
+}
