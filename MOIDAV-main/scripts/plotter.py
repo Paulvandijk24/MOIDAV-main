@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+from scripts.settings import PLOTS_DIR
+
 logger = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT / "output"
-PLOTS_DIR = OUTPUT_DIR / "plots"
 TABLES_DIR = OUTPUT_DIR / "tabellen"
 
 

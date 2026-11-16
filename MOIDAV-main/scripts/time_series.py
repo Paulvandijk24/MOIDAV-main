@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from goad_toolkit.analytics import NullDistribution
 
-from scripts.plotter import PLOTS_DIR
+from scripts.plotter import Plotter
 
 logger = logging.getLogger(__name__)
 
@@ -172,10 +172,9 @@ class TimeSeries:
         )
         figure.subplots_adjust(bottom=0.32, right=0.78)
 
-        PLOTS_DIR.mkdir(parents=True, exist_ok=True)
-        self.plot_path = PLOTS_DIR / "time_series.png"
         try:
-            figure.savefig(self.plot_path, dpi=100, bbox_inches="tight")
+            self.plot_path = Plotter().save_figure(
+                figure, filename="time_series.png", dpi=100
+            )
         finally:
             plt.close(figure)
-        logger.info("Saved time-series plot to %s", self.plot_path)
