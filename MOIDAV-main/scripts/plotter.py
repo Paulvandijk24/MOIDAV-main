@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Literal
 
 import matplotlib
 
@@ -127,10 +128,17 @@ class Plotter:
     def __init__(self, output_dir: Path | None = None) -> None:
         self.output_dir = output_dir or PLOTS_DIR
 
-    def save_figure(self, figure: plt.Figure, *, filename: str, dpi: int = 150) -> Path:
+    def save_figure(
+        self,
+        figure: plt.Figure,
+        *,
+        filename: str,
+        dpi: int = 150,
+        bbox_inches: Literal["tight"] | None = "tight",
+    ) -> Path:
         """Save a figure and return its path."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
         output_path = self.output_dir / filename
-        figure.savefig(output_path, dpi=dpi, bbox_inches="tight")
+        figure.savefig(output_path, dpi=dpi, bbox_inches=bbox_inches)
         logger.info("Saved plot to %s", output_path)
         return output_path

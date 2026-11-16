@@ -32,7 +32,7 @@ def main() -> None:
     Distributions(messages, chats["squad_vol"])
     Relationship(messages)
     DimensionModel()
-    Network(messages)
+    Network(chats["squad_vol"])
     logger.info("Project run completed.")
 
 
