@@ -24,15 +24,23 @@ def main() -> None:
     from wa_analyzer.logging_config import configure_logging
 
     configure_logging(ROOT)
-    logger.info("Starting chat preprocessing.")
+    logger.info("Preprocessing Squad chat exports.")
     chats = preprocess_squad_chats()
-    messages = chats["squad_plus_chicks"]
-    ComparingCategories(chats["squad_vol"])
-    TimeSeries(chats["squad_vol"])
-    Distributions(messages, chats["squad_vol"])
-    Relationship(messages)
-    DimensionModel()
-    Network(chats["squad_vol"])
+    squad_plus_chicks = chats["squad_plus_chicks"]
+    squad_vol = chats["squad_vol"]
+
+    logger.info("Running comparing-categories analysis.")
+    ComparingCategories(squad_vol)
+    logger.info("Running time-series analysis.")
+    TimeSeries(squad_vol)
+    logger.info("Running distribution analysis.")
+    Distributions(squad_plus_chicks, squad_vol)
+    logger.info("Running relationship analysis.")
+    Relationship(squad_plus_chicks)
+    logger.info("Running dimension-model analysis.")
+    DimensionModel(squad_plus_chicks)
+    logger.info("Running network analysis.")
+    Network(squad_vol)
     logger.info("Project run completed.")
 
 

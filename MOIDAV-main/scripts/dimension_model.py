@@ -4,11 +4,11 @@ import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from scripts.plotter import Plotter
-from scripts.preprocess_squad_chats import RAW_DIR, _read_archive
 from scripts.sessionize import merge_messages, sessionize
 
 logger = logging.getLogger(__name__)
@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 class DimensionModel:
     """Project Squad plus chicks chat sessions to the first two PCA components."""
 
-    def __init__(self) -> None:
-        messages, _, _ = _read_archive(
-            RAW_DIR / "Squad plus chicks 🐥.zip",
-            classify_authors=False,
-            continuation_separator="\n",
-        )
+    def __init__(self, messages: pd.DataFrame) -> None:
+        missing_columns = {"author", "timestamp", "message"} - set(messages.columns)
+        if missing_columns:
+            raise ValueError(
+                f"Missing dimension-model columns: {sorted(missing_columns)}"
+            )
+
         unnamed_author = messages["author"].str.fullmatch(r"\+?[\d\s().-]+") | (
             messages["author"].str.casefold().isin({"", "null", "unknown"})
         )
