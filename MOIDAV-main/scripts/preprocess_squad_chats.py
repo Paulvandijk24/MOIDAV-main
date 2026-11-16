@@ -8,6 +8,7 @@ from io import TextIOWrapper
 from pathlib import Path
 from zipfile import ZipFile
 
+import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -57,8 +58,58 @@ AUTHOR_GENDER = {
 }
 
 
+class ComparingCategoriesFeatures:
+    """Add the date, fire-phase, and emotion features used by the comparison."""
+
+    FIRE_DATE = pd.Timestamp("2025-07-06", tz="Europe/Amsterdam")
+    PHASE_ORDER = ["hele_chat_voor", "brand_dag", "hele_chat_na"]
+    EMOTION_PATTERNS = [
+        r"(?i)\b(?:blij|blijheid|lachen|lol|haha|hahaha|happy|joy|funny|fun)\b|[😂🤣😄😁😆😃😊😀😅🎉🥳🤩😍😘🥰🙂🙃😉😌🤗🥹😎🤪😜😝🤭💀❤️💕💖✨🙌👏]",
+        r"(?i)\b(?:boos|boosheid|kwaad|frustratie|frustrated|angry|mad|rage|wtf)\b|[😡😠🤬💢]",
+        r"(?i)\b(?:verdriet|verdrietig|huilen|huil|sad|sadness|cry|depressief|depressed|kut|klote|fuck|fucking|godverdomme|verdomme|shit|tering|tyfus|kanker|vervelend|rot|jammer|heftig|zielig|sterkte|gecondoleerd|so sad|sorry|that sucks)\b|[😢😭😞😔☹️🥺😿💔🖤😣😖😫😩😟😧😦😮‍💨🫣🫨🥶]",
+        r"(?i)\b(?:stress|gestrest|zenuwachtig|bang|angst|scared|afraid|nervous|anxious)\b|[😰😨😱😥]",
+    ]
+    EMOTION_LABELS = ["blij", "boos", "verdrietig", "angstig"]
+
+    def transform(self, messages: pd.DataFrame) -> pd.DataFrame:
+        """Return messages enriched with the features used in the notebook."""
+        missing_columns = {"timestamp", "message"} - set(messages.columns)
+        if missing_columns:
+            raise ValueError(
+                f"Missing comparing-categories columns: {sorted(missing_columns)}"
+            )
+
+        enriched = messages.copy()
+        enriched["local_date"] = (
+            pd.to_datetime(enriched["timestamp"], utc=True)
+            .dt.tz_convert("Europe/Amsterdam")
+            .dt.normalize()
+        )
+        enriched["full_chat_phase"] = np.select(
+            [
+                enriched["local_date"] < self.FIRE_DATE,
+                enriched["local_date"].eq(self.FIRE_DATE),
+                enriched["local_date"] > self.FIRE_DATE,
+            ],
+            self.PHASE_ORDER,
+            default="onbekend",
+        )
+
+        emotion_text = enriched["message"].fillna("").astype("string").str.lower()
+        enriched["message_emotion"] = np.select(
+            [
+                emotion_text.str.contains(pattern, regex=True, na=False)
+                for pattern in self.EMOTION_PATTERNS
+            ],
+            self.EMOTION_LABELS,
+            default="neutraal",
+        )
+        enriched["is_sad"] = enriched["message_emotion"].eq("verdrietig")
+        return enriched
+
+
 def _read_archive(
-    zip_path: Path, *, classify_authors: bool
+    zip_path: Path, *, classify_authors: bool, continuation_separator: str = " "
 ) -> tuple[pd.DataFrame, pd.DataFrame, int]:
     """Parse one WhatsApp ZIP, returning messages, system events, and continuations."""
     if not zip_path.is_file():
@@ -116,12 +167,12 @@ def _read_archive(
                     message_records[-1] = (
                         timestamp,
                         author,
-                        f"{message}\n{line}".strip(),
+                        f"{message}{continuation_separator}{line.strip()}".strip(),
                     )
                     continuation_lines += 1
                 elif last_record_kind == "event":
                     timestamp, event = event_records[-1]
-                    event_records[-1] = (timestamp, f"{event}\n{line}".strip())
+                    event_records[-1] = (timestamp, f"{event} {line.strip()}".strip())
                     continuation_lines += 1
                 elif line.strip():
                     raise ValueError(
@@ -134,6 +185,7 @@ def _read_archive(
     messages["author"] = messages["author"].replace(AUTHOR_ALIASES)
     messages["message_length"] = messages["message"].str.len()
     messages["word_count"] = messages["message"].str.split().str.len()
+    messages = ComparingCategoriesFeatures().transform(messages)
 
     if classify_authors:
         unclassified = set(messages["author"].unique()) - set(AUTHOR_GENDER)
